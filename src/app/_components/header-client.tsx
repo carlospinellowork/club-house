@@ -11,7 +11,7 @@ import {
   MenubarSeparator,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import { Bell, LogOut, Search, Settings, Shield, User } from "lucide-react";
+import { Bell, LogOut, Settings, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from "../../components/ui/tooltip";
 import { useLogout } from "../auth/mutation";
+import { UserSearchDialog } from "./user-search-dialog";
 
 interface Props {
   user: { id: string; name?: string; image?: string; email?: string } | null;
@@ -57,9 +58,7 @@ export default function HeaderClient({ user }: Props) {
         <div className="flex items-center space-x-2">
           {user?.id && (
             <>
-              <Button variant="ghost" size="sm" className="rounded-full">
-                <Search className="h-4 w-4" />
-              </Button>
+              <UserSearchDialog />
 
               <Button variant="ghost" size="sm" className="rounded-full">
                 <Bell className="h-4 w-4" />

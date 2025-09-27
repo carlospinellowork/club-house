@@ -2,20 +2,44 @@
 
 import z from "zod";
 
-import { protectedProcedure, router } from "@/server/trpc";
+import { protectedProcedure, publicProcedure, router } from "@/server/trpc";
 
 export const MemberProfileRouter = router({
+  searchGlobal: publicProcedure
+    .input(z.object({ query: z.string().min(2) }))
+    .query(async ({ input, ctx }) => {
+      const { query } = input;
+
+      const users = await ctx.prisma.user.findMany({
+        where: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          email: true,
+        },
+        take: 10,
+      });
+
+      return users;
+    }),
+
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
       const member = await ctx.prisma.user.findUnique({
         where: {
-          id: input.id
+          id: input.id,
         },
         include: {
           posts: true,
           comments: true,
-        }
+        },
       });
 
       if (!member) {
@@ -80,13 +104,13 @@ export const MemberProfileRouter = router({
 
       return data;
     }),
-  
+
   getAllPostsByMember: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
       const posts = await ctx.prisma.post.findMany({
         where: {
-          userId: input.id
+          userId: input.id,
         },
         orderBy: {
           createdAt: "desc",
