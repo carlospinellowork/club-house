@@ -1,11 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { SignupFormValues, signupSchema } from "@/schemas/auth";
-import { Lock, Mail, User } from "lucide-react";
+import { Loader2, Lock, Mail, User } from "lucide-react";
 import { FieldForm } from "./field-form";
 
 interface RegisterFormProps {
@@ -21,39 +21,67 @@ export function RegisterForm({
   showPassword,
   togglePassword,
 }: RegisterFormProps) {
-  const form = useForm<SignupFormValues>({
+  const { control, handleSubmit } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <FieldForm
-        label="Nome completo"
-        placeholder="João da Silva"
-        icon={<User />}
-        {...form.register("name")}
-        error={form.formState.errors.name?.message}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Controller
+        name="name"
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <FieldForm
+            {...field}
+            label="Nome completo"
+            placeholder="João da Silva"
+            icon={<User />}
+            error={error?.message}
+          />
+        )}
       />
-      <FieldForm
-        label="E-mail"
-        placeholder="H6f8o@example.com"
-        icon={<Mail />}
-        {...form.register("email")}
-        error={form.formState.errors.email?.message}
+
+      <Controller
+        name="email"
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <FieldForm
+            label="E-mail"
+            placeholder="H6f8o@example.com"
+            icon={<Mail />}
+            {...field}
+            error={error?.message}
+          />
+        )}
       />
-      <FieldForm
-        label="Senha"
-        placeholder="••••••••"
-        icon={<Lock />}
-        type={showPassword ? "text" : "password"}
-        togglePassword={togglePassword}
-        showPassword={showPassword}
-        {...form.register("password")}
-        error={form.formState.errors.password?.message}
+
+      <Controller
+        name="password"
+        control={control}
+        render={({ field, fieldState: { error } }) => (
+          <FieldForm
+            label="Senha"
+            placeholder="••••••••"
+            icon={<Lock />}
+            type={showPassword ? "text" : "password"}
+            togglePassword={togglePassword}
+            showPassword={showPassword}
+            {...field}
+            error={error?.message}
+          />
+        )}
       />
+
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Criando conta..." : "Criar conta"}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Criando conta ...
+          </>
+        ) : (
+          "Criar conta"
+        )}
       </Button>
     </form>
   );

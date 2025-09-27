@@ -11,7 +11,7 @@ import { ImageIcon, Loader2, Send, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 interface CreatePostProps {
@@ -33,7 +33,7 @@ export function CreatePost({ user }: CreatePostProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const form = useForm<CreatePostSchema>({
+  const { control, handleSubmit, reset, setValue } = useForm<CreatePostSchema>({
     resolver: zodResolver(createPostSchema),
     defaultValues: {
       content: "",
@@ -54,7 +54,7 @@ export function CreatePost({ user }: CreatePostProps) {
       reader.onload = () => {
         const base64 = reader.result as string;
         setPreview(base64);
-        form.setValue("image", base64);
+        setValue("image", base64);
       };
       reader.readAsDataURL(file);
     },
@@ -70,7 +70,7 @@ export function CreatePost({ user }: CreatePostProps) {
 
   const createPost = trpc.post.create.useMutation({
     onSuccess: () => {
-      form.reset();
+      reset();
       setPreview(null);
       utils.post.getAll.invalidate();
       toast.success("Post criado com sucesso");
@@ -85,7 +85,7 @@ export function CreatePost({ user }: CreatePostProps) {
   });
 
   const removeImage = () => {
-    form.setValue("image", undefined);
+    setValue("image", undefined);
     setPreview(null);
   };
 
@@ -100,7 +100,7 @@ export function CreatePost({ user }: CreatePostProps) {
       </CardHeader>
 
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="flex space-x-4">
             <Avatar className="h-12 w-12 ring-2 ring-primary/10">
               <AvatarImage
@@ -113,26 +113,32 @@ export function CreatePost({ user }: CreatePostProps) {
             </Avatar>
 
             <div className="flex-1 space-y-4">
-              <Textarea
-                placeholder="O que está acontecendo no clube?"
-                {...form.register("content")}
-                className="min-h-[120px] resize-none border-0 bg-muted/30 p-4 text-base leading-relaxed focus:ring-2 focus:ring-primary/20 rounded-xl"
-              />
-              {form.formState.errors.content && (
-                <p className="text-red-500 text-sm mt-1">
-                  {form.formState.errors.content.message}
-                </p>
-              )}
+              <Controller
+                name="content"
+                control={control}
+                render={({ field, fieldState: { error } }) => (
+                  <>
+                    <Textarea
+                      placeholder="O que está acontecendo no clube?"
+                      {...field}
+                      className="min-h-[120px] resize-none border-0 bg-muted/30 p-4 text-base leading-relaxed focus:ring-2 focus:ring-primary/20 rounded-xl"
+                    />
 
-              {/* Área de upload de imagem */}
+                    {error && (
+                      <p className="text-destructive">{error.message}</p>
+                    )}
+                  </>
+                )}
+              />
+
               {preview ? (
                 <div className="relative">
                   <Image
                     src={preview}
-                    width={500}
-                    height={500}
+                    width={600}
+                    height={600}
                     alt="Preview"
-                    className="w-full h-48 object-cover rounded-lg border"
+                    className="object-cover rounded-lg border"
                   />
                   <Button
                     type="button"

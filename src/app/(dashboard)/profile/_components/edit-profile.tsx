@@ -14,11 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { TMemberProfile } from "@/types/members";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2, Save } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useDropzone } from "react-dropzone";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -46,16 +45,10 @@ export function EditProfileDialog({
   member,
 }: EditProfileDialogProps) {
   const [isPending, startTransition] = useTransition();
-  const queryClient = useQueryClient();
   const [preview, setPreview] = useState<string | null>(null);
   const util = trpc.useContext();
 
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<EditProfileForm>({
+  const { control, setValue, handleSubmit } = useForm<EditProfileForm>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
       name: member.name,
@@ -136,44 +129,51 @@ export function EditProfileDialog({
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="name">Nome</Label>
-              <Input
-                id="name"
-                {...register("name")}
-                placeholder="Seu nome completo"
-              />
-              {errors.name && (
-                <p className="text-xs text-red-500">{errors.name.message}</p>
+            <Controller
+              name="name"
+              control={control}
+              render={({ field, fieldState: { error } }) => (
+                <div className="space-y-1">
+                  <Label htmlFor="name">Nome</Label>
+                  <Input id="name" {...field} placeholder="Seu nome completo" />
+                  {error && (
+                    <p className="text-xs text-red-500">{error.message}</p>
+                  )}
+                </div>
               )}
-            </div>
+            />
 
-            <div className="space-y-1">
-              <Label htmlFor="location">Localização</Label>
-              <Input
-                id="location"
-                {...register("location")}
-                placeholder="Cidade, Estado"
-              />
-              {errors.location && (
-                <p className="text-xs text-red-500">
-                  {errors.location.message}
-                </p>
+            <Controller
+              name="location"
+              control={control}
+              render={({ field, fieldState: { error } }) => (
+                <div className="space-y-1">
+                  <Label htmlFor="location">Localização</Label>
+                  <Input
+                    id="location"
+                    {...field}
+                    placeholder="Cidade, Estado"
+                  />
+                  {error && (
+                    <p className="text-xs text-red-500">{error.message}</p>
+                  )}
+                </div>
               )}
-            </div>
+            />
 
-            <div className="space-y-1">
-              <Label htmlFor="bio">Biografia</Label>
-              <Textarea
-                id="bio"
-                {...register("bio")}
-                placeholder="Conte um pouco sobre você..."
-                className="min-h-[80px] resize-none"
-              />
-              {errors.bio && (
-                <p className="text-xs text-red-500">{errors.bio.message}</p>
+            <Controller
+              name="bio"
+              control={control}
+              render={({ field, fieldState: { error } }) => (
+                <div className="space-y-1">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea id="bio" {...field} placeholder="Sua bio" />
+                  {error && (
+                    <p className="text-xs text-red-500">{error.message}</p>
+                  )}
+                </div>
               )}
-            </div>
+            />
           </div>
 
           <div className="flex space-x-3">
