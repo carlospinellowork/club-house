@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createPostSchema } from "@/schemas/post";
 import { TRPCError } from "@trpc/server";
-import { writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 import z from "zod";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
@@ -37,13 +37,10 @@ export const PostRouter = router({
 
           const timestamp = Date.now();
           const filename = `post-${timestamp}.${extension}`;
-          const filePath = join(
-            process.cwd(),
-            "public",
-            "uploads",
-            "posts",
-            filename
-          );
+          const uploadDir = join(process.cwd(), "public", "uploads", "posts");
+          const filePath = join(uploadDir, filename);
+
+          await mkdir(uploadDir, { recursive: true });
 
           await writeFile(filePath, buffer);
 

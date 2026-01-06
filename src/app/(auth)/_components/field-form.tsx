@@ -22,17 +22,17 @@ export function FieldForm({
 }: IFieldForm) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label className={error ? "text-red-500" : ""}>{label}</Label>
       <div className="relative">
         {icon && (
-          <span className="absolute left-3 top-3 h-4 w-4 text-muted-foreground flex items-center justify-center">
+          <span className={`absolute left-3 top-3 h-4 w-4 text-muted-foreground flex items-center justify-center ${error ? "text-red-500 animate-bounce" : ""}`}>
             {icon}
           </span>
         )}
         <Input
           {...props}
           placeholder={placeholder}
-          className={`pl-10 ${togglePassword ? "pr-10" : ""}`}
+          className={`pl-10 ${togglePassword ? "pr-10" : ""} ${error ? "border-red-500" : ""}`}
         />
         {togglePassword && (
           <Button

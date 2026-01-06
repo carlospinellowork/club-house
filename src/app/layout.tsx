@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,7 +17,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ClubHouse FC - Comunidade do Clube",
   description: "Plataforma social para sócios do ClubHouse FC",
-  generator: "v0.app",
 };
 
 export default function RootLayout({

@@ -4,32 +4,35 @@ import { ModeToggle } from "@/components/mode-color-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger,
+    Menubar,
+    MenubarContent,
+    MenubarItem,
+    MenubarMenu,
+    MenubarSeparator,
+    MenubarTrigger,
 } from "@/components/ui/menubar";
+import { authClient } from "@/lib/auth-client";
 import { Bell, LogOut, Settings, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useLogout } from "../(auth)/mutation";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
 } from "../../components/ui/tooltip";
-import { useLogout } from "../auth/mutation";
 import { UserSearchDialog } from "./user-search-dialog";
 
 interface Props {
-  user: { id: string; name?: string; image?: string; email?: string } | null;
+  user?: { id: string; name?: string; image?: string; email?: string } | null;
 }
 
-export default function HeaderClient({ user }: Props) {
+export default function HeaderClient({ user: initialUser }: Props) {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const user = session?.user ?? initialUser;
 
-  const { mutate: logout } = useLogout({ router });
+  const { mutate: logout, isPending } = useLogout({ router });
 
   const getInitials = (name: string | undefined) => {
     if (!name) return "U";
@@ -120,10 +123,11 @@ export default function HeaderClient({ user }: Props) {
 
                     <MenubarItem
                       onClick={() => logout()}
+                      disabled={isPending}
                       className="cursor-pointer text-red-600 focus:text-red-600 flex items-center gap-2"
                     >
-                      <LogOut className="h-4 w-4" />
-                      Sair
+                      <LogOut className="h-4 w-4 text-red-600 animate-in fade-in-0" />
+                      {isPending ? "Saindo..." : "Sair"}
                     </MenubarItem>
                   </MenubarContent>
                 </MenubarMenu>
