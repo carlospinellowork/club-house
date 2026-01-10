@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { createPostSchema, CreatePostSchema } from "@/schemas/post";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Loader2, Paperclip, X } from "lucide-react";
+import { ImageIcon, Loader2, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -175,15 +175,6 @@ export function CreatePost({ user }: CreatePostProps) {
               >
                 <ImageIcon className="h-5 w-5 mr-2" />
                 <span className="text-sm font-medium">Foto</span>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-9 px-3 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors hidden sm:flex"
-              >
-                <Paperclip className="h-5 w-5 mr-2" />
-                <span className="text-sm font-medium">Arquivo</span>
               </Button>
             </div>
 

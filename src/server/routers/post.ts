@@ -1,8 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { createPostSchema } from "@/schemas/post";
-import { TRPCError } from "@trpc/server";
-import { mkdir, writeFile } from "fs/promises";
-import { join } from "path";
 import z from "zod";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
 
@@ -13,45 +10,7 @@ export const PostRouter = router({
       let imageUrl: string | undefined = undefined;
 
       if (input.image && input.image.startsWith("data:image/")) {
-        try {
-          const base64Data = input.image.split(",")[1];
-          const buffer = Buffer.from(base64Data, "base64");
-
-          const matches = input.image.match(/^data:(image\/\w+);base64,/);
-          if (!matches || matches.length < 2) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Formato de imagem inválido",
-            });
-          }
-
-          const mimeType = matches[1];
-          const extension = mimeType.split("/")[1];
-
-          if (buffer.length > 5 * 1024 * 1024) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Imagem deve ter no máximo 5MB",
-            });
-          }
-
-          const timestamp = Date.now();
-          const filename = `post-${timestamp}.${extension}`;
-          const uploadDir = join(process.cwd(), "public", "uploads", "posts");
-          const filePath = join(uploadDir, filename);
-
-          await mkdir(uploadDir, { recursive: true });
-
-          await writeFile(filePath, buffer);
-
-          imageUrl = `/uploads/posts/${filename}`;
-        } catch (error) {
-          console.error("Error processing image:", error);
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Erro ao processar imagem",
-          });
-        }
+        imageUrl = input.image;
       }
 
       return prisma.post.create({
