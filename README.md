@@ -31,7 +31,7 @@ Este é um projeto de uma plataforma social para sócios do ClubHouse FC, desenv
 
 - Node.js >= 18
 - npm ou yarn
-- Banco de dados (SQLite por padrão, mas pode ser PostgreSQL/MySQL)
+- Banco de dados PostgreSQL
 
 ## Instalação
 
@@ -54,17 +54,22 @@ npm install
 yarn install
 ```
 
-4. Configure seu banco de dados no arquivo `.env`:
-
-```env
-DATABASE_URL="file:./dev.db" # Exemplo com SQLite
-```
+4. Configure as variáveis de ambiente:
+   - Copie o arquivo `.env.example` para `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Ajuste as variáveis no arquivo `.env`:
+     - `DATABASE_URL`: URL de conexão com seu banco de dados PostgreSQL.
+     - `BETTER_AUTH_SECRET`: Segredo para autenticação (gere um com `npx auth secret`).
+     - `BETTER_AUTH_URL`: URL base da aplicação (ex: `http://localhost:3000`).
 
 5. Rode as migrações do Prisma:
-
-```bash
-npx prisma migrate dev --name init
-```
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   npm run seed
+   ```
 
 ## Rodando o projeto
 
@@ -77,6 +82,20 @@ yarn dev
 ```
 
 O projeto estará disponível em [http://localhost:3000](http://localhost:3000).
+
+## Implantação em Produção
+
+Para subir o projeto para produção (ex: Vercel, Railway, Render), você precisará configurar as mesmas variáveis de ambiente no painel administrativo do provedor:
+
+1. **Variáveis de Ambiente**:
+   - `DATABASE_URL`: Deve apontar para o banco de dados PostgreSQL de produção.
+   - `BETTER_AUTH_SECRET`: Gere um segredo forte (ex: `openssl rand -base64 32`).
+   - `BETTER_AUTH_URL`: Deve ser a URL final do seu site (ex: `https://seu-dominio.com`).
+   - `NEXT_PUBLIC_APP_URL`: Mesma URL acima.
+
+2. **Dica para Vercel**:
+   - O comando de build deve ser `next build`.
+   - Certifique-se de que o Prisma instale o client corretamente durante o build (geralmente automático através do script `postinstall` se configurado, ou garantido pelo comando de build).
 
 ## Scripts úteis
 
