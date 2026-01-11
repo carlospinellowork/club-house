@@ -12,7 +12,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import { authClient } from "@/lib/auth-client";
-import { Bell, LogOut, Settings, Shield, User } from "lucide-react";
+import { LogOut, Shield, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLogout } from "../(auth)/mutation";
@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../components/ui/tooltip";
+import { NotificationBell } from "./notifications/notification-bell";
 import { UserSearchDialog } from "./user-search-dialog";
 
 interface Props {
@@ -63,9 +64,7 @@ export default function HeaderClient({ user: initialUser }: Props) {
             <>
               <UserSearchDialog />
 
-              <Button variant="ghost" size="sm" className="rounded-full">
-                <Bell className="h-4 w-4" />
-              </Button>
+              <NotificationBell />
 
               <Menubar className="border-none bg-transparent">
                 <MenubarMenu>
@@ -116,10 +115,10 @@ export default function HeaderClient({ user: initialUser }: Props) {
                       Meu Perfil
                     </MenubarItem>
 
-                    <MenubarItem className="cursor-pointer flex items-center gap-2">
+                    {/* <MenubarItem className="cursor-pointer flex items-center gap-2">
                       <Settings className="h-4 w-4" />
                       Configurações
-                    </MenubarItem>
+                    </MenubarItem> */}
 
                     <MenubarSeparator />
 

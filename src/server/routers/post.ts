@@ -38,14 +38,24 @@ export const PostRouter = router({
       },
     });
 
+    const userFollows = ctx.user
+      ? await prisma.follow.findMany({
+          where: { followerId: ctx.user.id },
+          select: { followingId: true },
+        })
+      : [];
+    const followingIds = new Set(userFollows.map((f) => f.followingId));
+
     return posts.map((post) => {
       const isLiked = ctx.user ? post.likes.some((like) => like.userId === ctx.user?.id) : false;
+      const isFollowing = followingIds.has(post.userId);
 
       return {
         ...post,
         likes: post.likes.length,
         comments: post.comments.length,
         isLiked,
+        isFollowing,
       };
     });
   }),
@@ -83,6 +93,7 @@ export const PostRouter = router({
           name: post.user.name,
           image: post.user.image,
           email: post.user.email,
+          bio: post.user.bio,
         },
         likes: post.likes.length,
         comments: post.comments.length,

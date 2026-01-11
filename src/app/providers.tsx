@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink } from "@trpc/client";
@@ -30,7 +31,9 @@ export function Providers({ children }: { children: ReactNode }) {
     >
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
           <Toaster position="top-right" />
         </QueryClientProvider>
       </trpc.Provider>
