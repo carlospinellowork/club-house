@@ -1,7 +1,10 @@
 ````markdown
 # ClubHouse FC - Comunidade do Clube
 
-Este é um projeto de uma plataforma social para sócios do ClubHouse FC, desenvolvido com Next.js, React e TypeScript.
+O ClubHouse FC é um projeto que criei para praticar a construção de uma aplicação fullstack moderna,
+simulando uma plataforma de comunidade para sócios de um clube.
+
+O foco foi trabalhar com autenticação, organização de dados, validações e comunicação type-safe entre frontend e backend.
 
 ## Características
 
@@ -26,6 +29,7 @@ Este é um projeto de uma plataforma social para sócios do ClubHouse FC, desenv
 - React Query
 - TRPC
 - Lucide Icons
+- framer-motion
 
 ## Pré-requisitos
 
@@ -82,35 +86,6 @@ yarn dev
 ```
 
 O projeto estará disponível em [http://localhost:3000](http://localhost:3000).
-
-## Implantação em Produção
-
-Para subir o projeto para produção (ex: Vercel, Railway, Render), você precisará configurar as mesmas variáveis de ambiente no painel administrativo do provedor:
-
-1. **Variáveis de Ambiente**:
-   - `DATABASE_URL`: Deve apontar para o banco de dados PostgreSQL de produção.
-   - `BETTER_AUTH_SECRET`: Gere um segredo forte (ex: `openssl rand -base64 32`).
-   - `BETTER_AUTH_URL`: Deve ser a URL final do seu site (ex: `https://seu-dominio.com`).
-   - `NEXT_PUBLIC_APP_URL`: Mesma URL acima.
-
-2. **Dica para Vercel**:
-   - O comando de build deve ser `next build`.
-   - Certifique-se de que o Prisma instale o client corretamente durante o build (geralmente automático através do script `postinstall` se configurado, ou garantido pelo comando de build).
-
-## Scripts úteis
-
-* `dev` - Inicia o servidor de desenvolvimento
-* `build` - Compila o projeto para produção
-* `start` - Inicia o projeto em produção
-* `prisma studio` - Abre o Prisma Studio para visualização do banco de dados
-
-## Contribuindo
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nome-da-feature`)
-3. Faça commit das alterações (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nome-da-feature`)
-5. Abra um Pull Request
 
 ## Licença
 
