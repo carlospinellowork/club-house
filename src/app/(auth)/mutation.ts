@@ -44,7 +44,6 @@ export const useLogin = ({
       }
 
       onSuccess?.(data.user);
-      toast.success("Login realizado com sucesso!");
       router.replace(`/feed/${data.user.id}`);
     },
     onError: (error: any) => {
@@ -83,7 +82,7 @@ export const useRegister = ({ router, setError }: IAuthMutationProps) => {
       return data;
     },
     onSuccess: (data) => {
-      toast.success("Conta criada com sucesso!");
+      toast.success("Conta criada com sucesso, seja bem-vindo!");
       router.replace(`/feed/${data.user.id}`);
     },
     onError: (error: any) => {
@@ -112,7 +111,6 @@ export const useLogout = ({ router }: IAuthMutationProps) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Logout realizado com sucesso");
       router.replace("/");
     },
     onError: (error: any) => {

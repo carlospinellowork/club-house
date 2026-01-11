@@ -3,22 +3,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { trpc } from "@/lib/trpc";
+import { toggleFollowAction, toggleLikeAction } from "@/server/actions";
 import type { AppRouter } from "@/server/routers/_app";
 import type { inferRouterOutputs } from "@trpc/server";
 import { Heart, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CommentsSection } from "./comment-section";
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type Post =
-  | RouterOutputs["post"]["getAll"][number]
-  | RouterOutputs["member"]["getAllPostsByMember"][number];
+  | (RouterOutputs["post"]["getAll"][number] & { isLiked?: boolean; isFollowing?: boolean })
+  | (RouterOutputs["member"]["getAllPostsByMember"][number] & { isLiked?: boolean; isFollowing?: boolean });
 
 type PostCardProps = {
   postCard: Post;
@@ -28,44 +29,34 @@ export function PostCard({ postCard }: PostCardProps) {
   const params = useParams();
   const utils = trpc.useUtils();
   const [openComments, setOpenComments] = useState(false);
+  const [isLiking, startLikeTransition] = useTransition();
+  const [isFollowing, startFollowTransition] = useTransition();
 
-  const { data: post, isLoading } = trpc.post.getById.useQuery({
-    postId: String(postCard.id),
-  });
+  const post = postCard;
 
-  const toggleLike = trpc.like.toggleLike.useMutation({
-    onSuccess: () =>
-      utils.post.getById.invalidate({ postId: String(postCard.id) }),
-    onError: () => toast.error("Erro ao curtir post"),
-  });
+  const handleLike = () => {
+    startLikeTransition(async () => {
+      try {
+        await toggleLikeAction({ postId: String(post.id) });
+        utils.post.getAll.invalidate();
+        utils.member.getAllPostsByMember.invalidate();
+      } catch (error) {
+        toast.error("Erro ao curtir post");
+      }
+    });
+  };
 
-  const toggleFollow = trpc.follow.toggleFollow.useMutation({
-    onSuccess: () =>
-      utils.post.getById.invalidate({ postId: String(postCard.id) }),
-    onError: () => toast.error("Erro ao seguir usuário"),
-  });
-
-  if (isLoading || !post)
-    return (
-      <div className="mt-6 space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="shadow-sm border border-border">
-            <CardContent className="space-y-3 py-4">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-48 w-full rounded-lg" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+  const handleFollow = () => {
+    startFollowTransition(async () => {
+      try {
+        await toggleFollowAction({ userId: post.user.id });
+        utils.post.getAll.invalidate();
+        utils.member.getAllPostsByMember.invalidate();
+      } catch (error) {
+        toast.error("Erro ao seguir usuário");
+      }
+    });
+  };
 
   return (
     <Card className="p-0 overflow-hidden border border-border/50 rounded-lg">
@@ -74,24 +65,31 @@ export function PostCard({ postCard }: PostCardProps) {
       <CardContent className="p-6 -mt-36 relative">
         <div className="flex items-start justify-between mb-6">
           <div className="flex flex-col items-start justify-center space-x-4">
-            <Link href={`/profile/${post.user.id}`}>
-              <Avatar className="h-36 w-36 border-4 cursor-pointer hover:opacity-90 transition">
-                {post.user.image ? (
-                  <AvatarImage
-                    className="object-cover"
-                    src={post.user.image || "/placeholder.svg"}
-                    alt={post.user.name}
-                  />
-                ) : (
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground font-medium text-lg">
-                    {post.user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            </Link>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href={`/profile/${post.user.id}`}>
+                  <Avatar className="h-36 w-36 border-4 cursor-pointer hover:opacity-90 transition bg-background">
+                    {post.user.image && (
+                      <AvatarImage
+                        className="object-cover"
+                        src={post.user.image}
+                        alt={post.user.name}
+                      />
+                    )}
+                    <AvatarFallback className="bg-linear-to-br from-primary/20 to-secondary/20 text-primary font-bold text-3xl">
+                      {post.user.name
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{post.user.bio}</p>
+              </TooltipContent>
+            </Tooltip>
 
             <div className="leading-tight">
               <h3 className="font-bold text-xl text-foreground mb-1">
@@ -111,7 +109,8 @@ export function PostCard({ postCard }: PostCardProps) {
               size="sm"
               variant={post.isFollowing ? "outline" : "default"}
               className="rounded-full px-4 py-2 text-sm font-medium"
-              onClick={() => toggleFollow.mutate({ userId: post.user.id })}
+              onClick={handleFollow}
+              disabled={isFollowing}
             >
               {post.isFollowing ? "Seguindo" : "Seguir"}
             </Button>
@@ -139,7 +138,8 @@ export function PostCard({ postCard }: PostCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => toggleLike.mutate({ postId: String(post.id) })}
+              onClick={handleLike}
+              disabled={isLiking}
               className={`flex items-center space-x-2 rounded-full px-0 py-1 hover:bg-transparent hover:text-red-500 ${
                 post.isLiked ? "text-red-500" : "text-muted-foreground"
               }`}

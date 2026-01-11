@@ -3,10 +3,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { addCommentAction } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -28,7 +29,7 @@ type CommentSchema = z.infer<typeof commentSchema>;
 
 export function CommentsSection({ postId }: CommentProps) {
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
-
+  const [isPending, startTransition] = useTransition();
   const utils = trpc.useUtils();
 
   const { data: comments, isLoading } = trpc.comment.getCommentByPost.useQuery({
@@ -57,31 +58,38 @@ export function CommentsSection({ postId }: CommentProps) {
     },
   });
 
-  const { mutate: createComment, isPending: isPendingComment } =
-    trpc.comment.addComment.useMutation({
-      onSuccess: () => {
+  const onSubmit: SubmitHandler<CommentSchema> = (data) => {
+    startTransition(async () => {
+      try {
+        await addCommentAction({
+          postId,
+          content: data.content,
+        });
         utils.comment.getCommentByPost.invalidate({ postId });
         reset();
-        resetReply();
-        setReplyingTo(null);
         toast.success("Comentário adicionado com sucesso");
-      },
-    });
-
-  const onSubmit: SubmitHandler<CommentSchema> = (data) => {
-    createComment({
-      postId,
-      content: data.content,
-      parentId: undefined,
+      } catch (error) {
+        toast.error("Erro ao adicionar comentário");
+      }
     });
   };
 
   const onSubmitReply: SubmitHandler<CommentSchema> = (data) => {
     if (!replyingTo) return;
-    createComment({
-      postId,
-      content: data.content,
-      parentId: String(replyingTo),
+    startTransition(async () => {
+      try {
+        await addCommentAction({
+          postId,
+          content: data.content,
+          parentId: String(replyingTo),
+        });
+        utils.comment.getCommentByPost.invalidate({ postId });
+        resetReply();
+        setReplyingTo(null);
+        toast.success("Resposta enviada com sucesso");
+      } catch (error) {
+        toast.error("Erro ao enviar resposta");
+      }
     });
   };
 
@@ -97,15 +105,15 @@ export function CommentsSection({ postId }: CommentProps) {
             <input
               {...field}
               type="text"
-              className="flex-1 border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+              className="flex-1 border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none bg-background"
               placeholder="Adicione um comentário..."
             />
           )}
         />
-        <Button size="sm" type="submit" disabled={isPendingComment}>
-          {isPendingComment ? (
+        <Button size="sm" type="submit" disabled={isPending}>
+          {isPending ? (
             <>
-              <Loader2 className="animate-spin" /> Comentando...
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Comentando...
             </>
           ) : (
             "Comentar"
@@ -118,20 +126,20 @@ export function CommentsSection({ postId }: CommentProps) {
           <div key={comment.id} className="flex flex-col space-y-2">
             <div className="flex gap-3">
               <Link href={`/profile/${comment.user.id}`}>
-                <Avatar className="h-10 w-10 cursor-pointer">
-                  {comment.user.image ? (
-                    <AvatarImage src={comment.user.image} />
-                  ) : (
-                    <AvatarFallback className="bg-primary text-primary dark:text-foreground font-medium">
-                      {comment.user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
+                <Avatar className="h-10 w-10 cursor-pointer border border-border/50 bg-muted">
+                  {comment.user.image && (
+                    <AvatarImage src={comment.user.image} className="object-cover" />
                   )}
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                    {comment.user.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
               </Link>
-              <div className="flex-1 bg-gray-100 rounded-lg p-3">
+              <div className="flex-1 bg-muted/30 rounded-lg p-3 border border-border/20">
                 <span className="font-medium text-sm">{comment.user.name}</span>
                 <p className="text-sm mt-1">{comment.content}</p>
 
@@ -139,7 +147,7 @@ export function CommentsSection({ postId }: CommentProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="px-1 py-0"
+                    className="px-1 py-0 h-auto"
                     onClick={() =>
                       setReplyingTo(
                         replyingTo === comment.id ? null : comment.id
@@ -162,13 +170,13 @@ export function CommentsSection({ postId }: CommentProps) {
                         <input
                           {...field}
                           type="text"
-                          className="flex-1 border rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
+                          className="flex-1 border rounded px-2 py-1 text-sm focus:ring-1 focus:ring-primary focus:outline-none bg-background"
                           placeholder="Escreva sua resposta..."
                         />
                       )}
                     />
-                    <Button size="sm" type="submit" disabled={isPendingComment}>
-                      {isPendingComment ? (
+                    <Button size="sm" type="submit" disabled={isPending}>
+                      {isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Enviando...
@@ -187,20 +195,20 @@ export function CommentsSection({ postId }: CommentProps) {
                 {comment.replies.map((reply) => (
                   <div key={reply.id} className="flex gap-3">
                     <Link href={`/profile/${reply.user.id}`}>
-                      <Avatar className="h-8 w-8 cursor-pointer">
-                        {reply.user.image ? (
-                          <AvatarImage src={reply.user.image} />
-                        ) : (
-                          <AvatarFallback className="bg-secondary text-secondary-foreground font-medium">
-                            {reply.user.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
+                      <Avatar className="h-8 w-8 cursor-pointer border border-border/50 bg-muted">
+                        {reply.user.image && (
+                          <AvatarImage src={reply.user.image} className="object-cover" />
                         )}
+                        <AvatarFallback className="bg-secondary/20 text-secondary-foreground font-bold text-xs">
+                          {reply.user.name
+                            ?.split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                     </Link>
-                    <div className="flex-1 bg-gray-50 rounded-lg p-2">
+                    <div className="flex-1 bg-muted/50 rounded-lg p-2 border border-border/10">
                       <span className="font-medium text-sm">
                         {reply.user.name}
                       </span>

@@ -4,12 +4,12 @@ import { ModeToggle } from "@/components/mode-color-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-    Menubar,
-    MenubarContent,
-    MenubarItem,
-    MenubarMenu,
-    MenubarSeparator,
-    MenubarTrigger,
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger,
 } from "@/components/ui/menubar";
 import { authClient } from "@/lib/auth-client";
 import { Bell, LogOut, Settings, Shield, User } from "lucide-react";
@@ -17,9 +17,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLogout } from "../(auth)/mutation";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "../../components/ui/tooltip";
 import { UserSearchDialog } from "./user-search-dialog";
 
@@ -75,13 +75,15 @@ export default function HeaderClient({ user: initialUser }: Props) {
                       size="icon"
                       className="rounded-full h-8 w-8 p-0"
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          className="object-cover"
-                          src={user?.image || "/diverse-user-avatars.png"}
-                          alt={user?.name || "Usuário"}
-                        />
-                        <AvatarFallback className="bg-primary text-primary dark:text-foreground">
+                      <Avatar className="h-8 w-8 ring-1 ring-border bg-muted">
+                        {user?.image && (
+                          <AvatarImage
+                            className="object-cover"
+                            src={user.image}
+                            alt={user?.name || "Usuário"}
+                          />
+                        )}
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                           {getInitials(user?.name)}
                         </AvatarFallback>
                       </Avatar>

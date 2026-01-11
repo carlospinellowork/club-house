@@ -26,7 +26,7 @@ export const PostRouter = router({
       });
     }),
 
-  getAll: publicProcedure.query(async () => {
+  getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await prisma.post.findMany({
       orderBy: {
         createdAt: "desc",
@@ -37,7 +37,17 @@ export const PostRouter = router({
         likes: true,
       },
     });
-    return posts;
+
+    return posts.map((post) => {
+      const isLiked = ctx.user ? post.likes.some((like) => like.userId === ctx.user?.id) : false;
+
+      return {
+        ...post,
+        likes: post.likes.length,
+        comments: post.comments.length,
+        isLiked,
+      };
+    });
   }),
 
   getById: protectedProcedure

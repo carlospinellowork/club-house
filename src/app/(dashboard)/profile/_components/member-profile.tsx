@@ -10,10 +10,24 @@ import { useState } from "react";
 import { EditProfileDialog } from "./edit-profile";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { AppRouter } from "@/server/routers/_app";
+import { inferRouterOutputs } from "@trpc/server";
 import { useParams } from "next/navigation";
 import { PostCard } from "../../feed/[id]/_components/post-card";
 
-export function MemberProfile() {
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type MemberOutput = RouterOutput["member"]["getById"];
+type PostsOutput = RouterOutput["member"]["getAllPostsByMember"];
+
+interface MemberProfileProps {
+  initialMember: MemberOutput;
+  initialPosts: PostsOutput;
+}
+
+export function MemberProfile({
+  initialMember,
+  initialPosts,
+}: MemberProfileProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const params = useParams();
   const memberId = params.id as string;
@@ -22,13 +36,19 @@ export function MemberProfile() {
     data: member,
     isLoading,
     isError,
-  } = trpc.member.getById.useQuery({
-    id: memberId,
-  });
+  } = trpc.member.getById.useQuery(
+    {
+      id: memberId,
+    },
+    { initialData: initialMember }
+  );
 
-  const { data: posts } = trpc.member.getAllPostsByMember.useQuery({
-    id: memberId,
-  });
+  const { data: posts } = trpc.member.getAllPostsByMember.useQuery(
+    {
+      id: memberId,
+    },
+    { initialData: initialPosts }
+  );
 
   const stats = [
     { label: "Posts", value: member?.stats.posts },

@@ -121,6 +121,12 @@ export const MemberProfileRouter = router({
           likes: true,
         },
       });
-      return posts;
+
+      return posts.map((post) => ({
+        ...post,
+        likes: post.likes.length,
+        comments: post.comments.length,
+        isLiked: post.likes.some((like) => like.userId === ctx.user.id),
+      }));
     }),
 });
