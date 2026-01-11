@@ -1,5 +1,5 @@
-export const formatTimeAgo = (dateStr: string) => {
-    const date = new Date(dateStr);
+export const formatTimeAgo = (dateValue: string | Date) => {
+    const date = new Date(dateValue);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 

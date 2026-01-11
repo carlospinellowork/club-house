@@ -3,12 +3,16 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { mockNotifications } from "@/mocks/notification";
+import { trpc } from "@/lib/trpc";
 import { Bell } from "lucide-react";
 import { NotificationList } from "./notification-list";
 
 export function NotificationBell() {
-  const unreadNotifications = mockNotifications.filter(notification => !notification.read).length
+  const { data: notifications = [] } = trpc.notification.getUnread.useQuery(undefined, {
+    refetchInterval: 10000
+  });
+
+  const unreadNotifications = notifications.filter(n => !n.read).length;
 
   return (
     <Popover>
@@ -24,7 +28,7 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={8} className="w-80 p-0 shadow-2xl border-border/50 overflow-hidden">
-        <NotificationList notifications={mockNotifications} />
+        <NotificationList notifications={notifications} />
       </PopoverContent>
     </Popover>
   )

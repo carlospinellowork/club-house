@@ -44,3 +44,21 @@ export async function updateProfileAction(input: {
   revalidatePath("/");
   return res;
 }
+
+export async function getUnreadNotificationsAction() {
+  const caller = await api();
+  const res = await caller.notification.getUnread();
+  return res;
+}
+
+export async function markAllAsReadAction() {
+  const caller = await api();
+  const res = await caller.notification.markAllAsRead();
+  return res;
+}
+
+export async function markAsReadAction(input: { notificationId: string }) {
+  const caller = await api();
+  const res = await caller.notification.markAsRead(input);
+  return res;
+}

@@ -83,6 +83,14 @@ export const PostRouter = router({
         },
       });
 
+      const isNotificationRead = await prisma.notification.findFirst({
+        where: {
+          postId: post.id,
+          userId: ctx.user.id,
+          read: true,
+        },
+      });
+
       return {
         id: post.id,
         content: post.content,
@@ -99,6 +107,7 @@ export const PostRouter = router({
         comments: post.comments.length,
         isLiked,
         isFollowing: !!isFollowing,
+        isNotificationRead: !!isNotificationRead,
       };
     }),
 });

@@ -20,6 +20,15 @@ export const FollowRouter = router({
             id: existingFollow.id,
           },
         });
+
+        await ctx.prisma.notification.deleteMany({
+          where: {
+            userId: input.userId,
+            actorId: ctx.user.id,
+            type: "FOLLOW_USER",
+          },
+        });
+
         return {
           following: false,
         };
@@ -30,6 +39,17 @@ export const FollowRouter = router({
             followingId: input.userId,
           },
         });
+
+        if (input.userId !== ctx.user.id) {
+          await ctx.prisma.notification.create({
+            data: {
+              userId: input.userId,
+              actorId: ctx.user.id,
+              type: "FOLLOW_USER",
+            },
+          });
+        }
+
         return {
           following: true,
         };

@@ -1,17 +1,31 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Notification } from "@/types/notification";
+import { TNotification } from "@/types/notification";
 import { formatTimeAgo } from "@/utils/formatTimeAgo";
-import { Heart, MessageSquare } from "lucide-react";
+import { Heart, MessageSquare, UserPlus } from "lucide-react";
 import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 
 interface NotificationItemProps {
-  notification: Notification;
+  notification: TNotification;
+  handleMarkAsRead: (notificationId: string) => void;
 }
 
-export function NotificationItem({ notification }: NotificationItemProps) {
+export function NotificationItem({ notification, handleMarkAsRead }: NotificationItemProps) {
+  const router = useRouter();
   const isUnread = !notification.read;
+
+  const handleNotificationClick = () => {
+    handleMarkAsRead(notification.id);
+
+    if (notification.type === "FOLLOW_USER") {
+      router.push(`/profile/${notification.actorId}`);
+    } else if (notification.postId) {
+      router.push(`/feed/${notification.postId}`);
+    }
+  };
 
   const getNotificationConfig = () => {
     if (notification.type === "LIKE_POST") {
@@ -30,6 +44,14 @@ export function NotificationItem({ notification }: NotificationItemProps) {
       };
     }
 
+    if (notification.type === "FOLLOW_USER") {
+      return {
+        icon: <UserPlus className="h-3 w-3 text-green-500" />,
+        label: "começou a te seguir",
+        color: "bg-green-500/10",
+      };
+    }
+
     return null;
   };
 
@@ -44,11 +66,23 @@ export function NotificationItem({ notification }: NotificationItemProps) {
         "flex items-center gap-3 p-4 border-b border-border/40 last:border-0 cursor-pointer transition-colors relative group",
         isUnread && "bg-primary/5"
       )}
+      onClick={handleNotificationClick}
     >
-      <div>
-
+      <div className="relative">
+        <Avatar className="h-10 w-10 border border-border/50">
+          {notification.actor.image && (
+            <AvatarImage src={notification.actor.image} className="object-cover" />
+          )}
+          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+            {notification.actor.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
         <div className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full border-2 shadow-sm",
+          "absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background shadow-sm",
           config?.color
         )}>
           {config?.icon}

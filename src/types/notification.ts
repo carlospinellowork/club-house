@@ -1,15 +1,5 @@
-export type NotificationType = 'LIKE_POST' | 'COMMENT_POST'
+import type { AppRouter } from "@/server/routers/_app";
+import type { inferRouterOutputs } from "@trpc/server";
 
-export interface Notification {
-  id: string
-  type: NotificationType
-  actor: {
-    id: string
-    name: string
-    avatarUrl?: string
-  }
-  postId?: string
-  commentId?: string
-  read: boolean
-  createdAt: string
-}
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type TNotification = RouterOutputs["notification"]["getUnread"][number];

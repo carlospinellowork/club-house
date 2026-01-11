@@ -5,11 +5,19 @@ export const LikeRouter = router({
   toggleLike: protectedProcedure
     .input(z.object({ postId: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      const postIdNum = Number(input.postId);
+
+      const post = await ctx.prisma.post.findUnique({
+        where: { id: postIdNum },
+      });
+
+      if (!post) throw new Error("Post não encontrado");
+
       const existingLike = await ctx.prisma.like.findUnique({
         where: {
           userId_postId: {
             userId: ctx.user.id,
-            postId: Number(input.postId),
+            postId: postIdNum,
           },
         },
       });
@@ -20,19 +28,47 @@ export const LikeRouter = router({
             id: existingLike.id,
           },
         });
-        return {
-          liked: false,
-        };
+        
+        await ctx.prisma.notification.deleteMany({
+          where: {
+            userId: post.userId,
+            actorId: ctx.user.id,
+            postId: postIdNum,
+            type: "LIKE_POST",
+          },
+        });
+
+        return { liked: false };
       } else {
         await ctx.prisma.like.create({
           data: {
             userId: ctx.user.id,
-            postId: Number(input.postId),
+            postId: postIdNum,
           },
         });
-        return {
-          liked: true,
-        };
+
+        if (post.userId !== ctx.user.id) {
+       
+          await ctx.prisma.notification.deleteMany({
+            where: {
+              userId: post.userId,
+              actorId: ctx.user.id,
+              postId: postIdNum,
+              type: "LIKE_POST",
+            }
+          });
+
+          await ctx.prisma.notification.create({
+            data: {
+              userId: post.userId,
+              actorId: ctx.user.id,
+              postId: postIdNum,
+              type: "LIKE_POST",
+            },
+          });
+        }
+
+        return { liked: true };
       }
     }),
 

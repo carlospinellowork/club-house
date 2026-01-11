@@ -66,6 +66,7 @@ export function CommentsSection({ postId }: CommentProps) {
           content: data.content,
         });
         utils.comment.getCommentByPost.invalidate({ postId });
+        utils.post.getAll.invalidate();
         reset();
         toast.success("Comentário adicionado com sucesso");
       } catch (error) {
@@ -84,6 +85,7 @@ export function CommentsSection({ postId }: CommentProps) {
           parentId: String(replyingTo),
         });
         utils.comment.getCommentByPost.invalidate({ postId });
+        utils.post.getAll.invalidate();
         resetReply();
         setReplyingTo(null);
         toast.success("Resposta enviada com sucesso");
