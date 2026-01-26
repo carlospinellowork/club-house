@@ -140,11 +140,11 @@ export function PostCard({ postCard }: PostCardProps) {
               size="sm"
               onClick={handleLike}
               disabled={isLiking}
-              className={`flex items-center space-x-2 rounded-full px-0 py-1 hover:bg-transparent hover:text-red-500 ${
-                post.isLiked ? "text-red-500" : "text-muted-foreground"
-              }`}
+              className={`flex items-center space-x-2 rounded-full px-0 py-1 hover:bg-transparent hover:text-red-500 ${post.isLiked ? "text-red-500" : "text-muted-foreground"
+                }`}
             >
               <Heart
+                data-testid="heart-icon"
                 className={`h-5 w-5 ${post.isLiked ? "fill-current" : ""}`}
               />
               <span className="text-sm">{post.likes}</span>
