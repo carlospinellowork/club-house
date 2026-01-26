@@ -11,8 +11,8 @@ export function AuthTabs({ defaultValue = "sign-in", value, onValueChange, child
   return (
     <Tabs value={value} defaultValue={defaultValue} onValueChange={onValueChange} className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="sign-in">Entrar</TabsTrigger>
-        <TabsTrigger value="sign-up">Cadastrar</TabsTrigger>
+        <TabsTrigger value="sign-in" data-testid="tab-sign-in">Entrar</TabsTrigger>
+        <TabsTrigger value="sign-up" data-testid="tab-sign-up">Cadastrar</TabsTrigger>
       </TabsList>
       {children}
     </Tabs>

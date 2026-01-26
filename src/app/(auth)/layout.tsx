@@ -2,6 +2,7 @@
 
 import { Loader2, Shield } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import BackgroundImage from "@/assets/photo-1489944440615-453fc2b6a9a9.avif";
 import {
@@ -62,7 +63,7 @@ export default function AuthLayout({
         <div className={cn(
           "absolute inset-0 z-50 bg-background/60 backdrop-blur-xs flex items-center justify-center transition-opacity duration-300 pointer-events-none opacity-0 text-primary",
           isPending && "opacity-100 pointer-events-auto"
-        )}>
+        )} data-testid="auth-loading">
           <div className="flex flex-col items-center gap-4 animate-pulse">
             <Shield className="size-24 opacity-20" />
             <Loader2 className="animate-spin size-6" />
@@ -70,12 +71,12 @@ export default function AuthLayout({
         </div>
 
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="/" className="flex items-center gap-2 font-medium">
+          <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
               <Shield className="size-4" />
             </div>
             ClubHouse FC
-          </a>
+          </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
