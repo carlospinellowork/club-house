@@ -1,6 +1,6 @@
 "use client";
 
-import BannerImg from "@/assets/generateimage.png";
+import BannerImg from "@/assets/photo-1489944440615-453fc2b6a9a9.avif";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

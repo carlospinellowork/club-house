@@ -2,10 +2,23 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { trpc } from "@/lib/trpc";
+import { AppRouter } from "@/server/routers/_app";
+import { inferRouterOutputs } from "@trpc/server";
 import { PostCard } from "./post-card";
 
-const ListPosts = () => {
-  const { data: post, isLoading } = trpc.post.getAll.useQuery();
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type PostsOutput = RouterOutput["post"]["getAll"];
+
+interface ListPostsProps {
+  initialData: PostsOutput;
+}
+
+const ListPosts = ({ initialData }: ListPostsProps) => {
+  const { data: post, isLoading } = trpc.post.getAll.useQuery(undefined, {
+    initialData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
   return (
     <div className="space-y-6">

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
+import { updateProfileAction } from "@/server/actions";
 import { TMemberProfile } from "@/types/members";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, Loader2, Save } from "lucide-react";
@@ -46,7 +47,7 @@ export function EditProfileDialog({
 }: EditProfileDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [preview, setPreview] = useState<string | null>(null);
-  const util = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const { control, setValue, handleSubmit } = useForm<EditProfileForm>({
     resolver: zodResolver(editProfileSchema),
@@ -64,30 +65,31 @@ export function EditProfileDialog({
       if (acceptedFiles.length === 0) return;
       const file = acceptedFiles[0];
       setValue("image", file);
-      const url = URL.createObjectURL(file);
-      setPreview(url);
+      
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     },
   });
 
-  const { mutate: updateProfile, isPending: isPendingUpdate } =
-    trpc.member.updateProfile.useMutation({
-      onSuccess: () => {
-        toast.success("Perfil atualizado com sucesso");
-        util.member.getById.invalidate();
-      },
-
-      onError: (error) => {
-        toast.error(error.message || "Erro ao atualizar perfil");
-      },
-    });
-
   const onSubmit = (data: EditProfileForm) => {
-    startTransition(() => {
-      updateProfile({
-        ...data,
-        id: member.id,
-        image: preview || member.avatar || undefined,
-      });
+    startTransition(async () => {
+      try {
+        await updateProfileAction({
+          id: member.id,
+          name: data.name,
+          location: data.location,
+          bio: data.bio,
+          image: preview || member.avatar || undefined,
+        });
+        utils.member.getById.invalidate({ id: member.id });
+        toast.success("Perfil atualizado com sucesso");
+        onOpenChange(false);
+      } catch (error: any) {
+        toast.error(error.message || "Erro ao atualizar perfil");
+      }
     });
   };
 
@@ -102,16 +104,19 @@ export function EditProfileDialog({
           <div className="flex flex-col items-center space-y-3">
             <div {...getRootProps()} className="relative cursor-pointer">
               <input {...getInputProps()} />
-              <Avatar className="h-20 w-20">
-                <AvatarImage
-                  src={preview || member.avatar || ""}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-primary text-primary dark:text-foreground text-xl">
+              <Avatar className="h-20 w-20 border-2 border-primary/20 bg-muted">
+                {(preview || member.avatar) && (
+                  <AvatarImage
+                    src={preview || member.avatar || undefined}
+                    className="object-cover"
+                  />
+                )}
+                <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                   {member.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <Button
@@ -185,8 +190,8 @@ export function EditProfileDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPendingUpdate} className="flex-1">
-              {isPendingUpdate ? (
+            <Button type="submit" disabled={isPending} className="flex-1">
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Salvando

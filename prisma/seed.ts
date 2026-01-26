@@ -1,11 +1,8 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "../src/generated/prisma"
 
 const prisma = new PrismaClient()
 
 async function main() {
-  // Senha padrão para todos os usuários (hash)
-
-  // Usuários de exemplo
   const users = [
     {
       id: "current-user",

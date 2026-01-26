@@ -1,7 +1,10 @@
 ````markdown
 # ClubHouse FC - Comunidade do Clube
 
-Este é um projeto de uma plataforma social para sócios do ClubHouse FC, desenvolvido com Next.js, React e TypeScript.
+O ClubHouse FC é um projeto que criei para praticar a construção de uma aplicação fullstack moderna,
+simulando uma plataforma de comunidade para sócios de um clube.
+
+O foco foi trabalhar com autenticação, organização de dados, validações e comunicação type-safe entre frontend e backend.
 
 ## Características
 
@@ -26,12 +29,13 @@ Este é um projeto de uma plataforma social para sócios do ClubHouse FC, desenv
 - React Query
 - TRPC
 - Lucide Icons
+- framer-motion
 
 ## Pré-requisitos
 
 - Node.js >= 18
 - npm ou yarn
-- Banco de dados (SQLite por padrão, mas pode ser PostgreSQL/MySQL)
+- Banco de dados PostgreSQL
 
 ## Instalação
 
@@ -54,17 +58,22 @@ npm install
 yarn install
 ```
 
-4. Configure seu banco de dados no arquivo `.env`:
-
-```env
-DATABASE_URL="file:./dev.db" # Exemplo com SQLite
-```
+4. Configure as variáveis de ambiente:
+   - Copie o arquivo `.env.example` para `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Ajuste as variáveis no arquivo `.env`:
+     - `DATABASE_URL`: URL de conexão com seu banco de dados PostgreSQL.
+     - `BETTER_AUTH_SECRET`: Segredo para autenticação (gere um com `npx auth secret`).
+     - `BETTER_AUTH_URL`: URL base da aplicação (ex: `http://localhost:3000`).
 
 5. Rode as migrações do Prisma:
-
-```bash
-npx prisma migrate dev --name init
-```
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   npm run seed
+   ```
 
 ## Rodando o projeto
 
@@ -77,21 +86,6 @@ yarn dev
 ```
 
 O projeto estará disponível em [http://localhost:3000](http://localhost:3000).
-
-## Scripts úteis
-
-* `dev` - Inicia o servidor de desenvolvimento
-* `build` - Compila o projeto para produção
-* `start` - Inicia o projeto em produção
-* `prisma studio` - Abre o Prisma Studio para visualização do banco de dados
-
-## Contribuindo
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nome-da-feature`)
-3. Faça commit das alterações (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nome-da-feature`)
-5. Abra um Pull Request
 
 ## Licença
 

@@ -6,10 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 import { createPostSchema, CreatePostSchema } from "@/schemas/post";
+import { createPostAction } from "@/server/actions";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImageIcon, Loader2, Paperclip, X } from "lucide-react";
+import { ImageIcon, Loader2, X } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useDropzone } from "react-dropzone";
 import { Controller, useForm } from "react-hook-form";
 import TextareaAutosize from "react-textarea-autosize";
@@ -31,6 +32,7 @@ interface CreatePostProps {
 
 export function CreatePost({ user }: CreatePostProps) {
   const utils = trpc.useUtils();
+  const [isPending, startTransition] = useTransition();
   const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,19 +65,7 @@ export function CreatePost({ user }: CreatePostProps) {
     accept: { "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"] },
     maxFiles: 1,
     maxSize: 5 * 1024 * 1024,
-    noClick: true, // We'll handle clicking via a button
-  });
-
-  const createPost = trpc.post.create.useMutation({
-    onSuccess: () => {
-      reset();
-      setPreview(null);
-      utils.post.getAll.invalidate();
-      toast.success("Post criado com sucesso!");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Erro ao criar post");
-    },
+    noClick: true,
   });
 
   const removeImage = () => {
@@ -86,12 +76,23 @@ export function CreatePost({ user }: CreatePostProps) {
     }
   };
 
-  const onSubmit = (data: CreatePostSchema) => {
+  const onSubmit = async (data: CreatePostSchema) => {
     if (!data.content.trim() && !data.image) {
       toast.error("O post não pode estar vazio");
       return;
     }
-    createPost.mutate(data);
+    
+    startTransition(async () => {
+      try {
+        await createPostAction(data);
+        utils.post.getAll.invalidate();
+        reset();
+        setPreview(null);
+        toast.success("Post criado com sucesso!");
+      } catch (error: any) {
+        toast.error(error.message || "Erro ao criar post");
+      }
+    });
   };
 
   return (
@@ -103,13 +104,18 @@ export function CreatePost({ user }: CreatePostProps) {
         <input {...getInputProps()} />
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="flex gap-4">
-            <Avatar className="h-10 w-10 shrink-0 ring-1 ring-border">
-              <AvatarImage
-                className="object-cover"
-                src={user?.image || "/diverse-user-avatars.png"}
-              />
-              <AvatarFallback>
-                {user?.name?.slice(0, 2)?.toUpperCase()}
+            <Avatar className="h-10 w-10 shrink-0 ring-1 ring-border bg-muted">
+              {user?.image && (
+                <AvatarImage
+                  className="object-cover"
+                  src={user.image}
+                />
+              )}
+              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                {user?.name?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("")
+                    .toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
@@ -176,15 +182,6 @@ export function CreatePost({ user }: CreatePostProps) {
                 <ImageIcon className="h-5 w-5 mr-2" />
                 <span className="text-sm font-medium">Foto</span>
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-9 px-3 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors hidden sm:flex"
-              >
-                <Paperclip className="h-5 w-5 mr-2" />
-                <span className="text-sm font-medium">Arquivo</span>
-              </Button>
             </div>
 
             <div className="flex items-center gap-3">
@@ -197,10 +194,10 @@ export function CreatePost({ user }: CreatePostProps) {
               </span>
               <Button
                 type="submit"
-                disabled={createPost.isPending || (!content.trim() && !image)}
+                disabled={isPending || (!content.trim() && !image)}
                 className="rounded-full px-6 font-semibold shadow-sm transition-all active:scale-95"
               >
-                {createPost.isPending ? (
+                {isPending ? (
                   <>
                     <Loader2 className="animate-spin h-4 w-4 mr-2" />
                     Enviando
