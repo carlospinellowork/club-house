@@ -37,8 +37,14 @@ export const MemberProfileRouter = router({
           id: input.id,
         },
         include: {
-          posts: true,
+          posts: {
+            include: {
+              likes: true,
+            }
+          },
           comments: true,
+          followers: true,
+          following: true,
         },
       });
 
@@ -47,6 +53,8 @@ export const MemberProfileRouter = router({
       }
 
       const isOwnProfile = ctx.user.id === input.id;
+      
+      const totalLikesReceived = member.posts.reduce((acc, post) => acc + post.likes.length, 0);
 
       const response = {
         id: member.id,
@@ -59,18 +67,85 @@ export const MemberProfileRouter = router({
         }),
         bio: member.bio,
         location: member.location,
+        role: member.role,
+        hasOnboarded: member.hasOnboarded,
+        favoriteTeamId: member.favoriteTeamId,
+        favoriteTeamName: member.favoriteTeamName,
+        outlet: member.outlet,
+        isVerified: member.isVerified,
         stats: {
           posts: member.posts.length,
           comments: member.comments.length,
-          likes: 0,
-          following: 0,
-          followers: 0,
+          likes: totalLikesReceived,
+          following: member.following.length,
+          followers: member.followers.length,
         },
-        badges: [],
+        badges: member.posts.length > 10 ? ["Frequente", "Influenciador"] : ["Novato"],
         isOwnProfile,
       };
 
       return response;
+    }),
+
+  getActivityData: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }: { input: { id: string }, ctx: any }) => {
+      const segments = 6;
+      const data = [];
+      
+      for (let i = segments - 1; i >= 0; i--) {
+        const startOfMonth = new Date();
+        startOfMonth.setMonth(startOfMonth.getMonth() - i);
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0);
+        endOfMonth.setHours(23, 59, 59, 999);
+
+        const postCount = await ctx.prisma.post.count({
+          where: {
+            userId: input.id,
+            createdAt: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+          },
+        });
+
+        const monthName = startOfMonth.toLocaleDateString("pt-BR", { month: "short" });
+        data.push({
+          name: monthName,
+          posts: postCount,
+        });
+      }
+
+      return data;
+    }),
+
+  completeOnboarding: protectedProcedure
+    .input(z.object({
+      role: z.enum(["FAN", "JOURNALIST"]),
+      favoriteTeamId: z.number().optional(),
+      favoriteTeamName: z.string().optional(),
+      outlet: z.string().optional(),
+      bio: z.string().optional(),
+      location: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { role, favoriteTeamId, favoriteTeamName, outlet, bio, location } = input;
+      
+      return await ctx.prisma.user.update({
+        where: { id: ctx.user.id },
+        data: {
+          role,
+          favoriteTeamId,
+          favoriteTeamName,
+          outlet,
+          bio,
+          location,
+          hasOnboarded: true,
+        }
+      });
     }),
 
   updateProfile: protectedProcedure
@@ -81,10 +156,14 @@ export const MemberProfileRouter = router({
         location: z.string().optional(),
         bio: z.string().max(300).optional(),
         image: z.string().optional(),
+        role: z.enum(["FAN", "JOURNALIST"]).optional(),
+        favoriteTeamId: z.number().optional(),
+        favoriteTeamName: z.string().optional(),
+        outlet: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, name, location, bio, image } = input;
+      const { id, name, location, bio, image, role, favoriteTeamId, favoriteTeamName, outlet } = input;
 
       if (ctx.user.id !== id) {
         throw new Error("Usuário nao autorizado");
@@ -99,6 +178,10 @@ export const MemberProfileRouter = router({
           location,
           bio,
           image,
+          role,
+          favoriteTeamId,
+          favoriteTeamName,
+          outlet,
         },
       });
 

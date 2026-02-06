@@ -5,6 +5,10 @@ export type TMemberProfile = {
   joinDate: string;
   bio: string | null;
   location: string | null;
+  role: "FAN" | "JOURNALIST";
+  favoriteTeamId: number | null;
+  favoriteTeamName: string | null;
+  outlet: string | null;
   stats: {
     posts: number;
     comments: number;

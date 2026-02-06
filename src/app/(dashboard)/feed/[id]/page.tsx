@@ -7,6 +7,7 @@ export default async function FeedPage() {
   const trpc = await api();
   const posts = await trpc.post.getAll();
 
+  console.log(posts)
   return (
     <div className="min-h-screen bg-background">
       <Header />

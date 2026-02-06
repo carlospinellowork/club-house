@@ -9,7 +9,7 @@ import { NotificationList } from "./notification-list";
 
 export function NotificationBell() {
   const { data: notifications = [] } = trpc.notification.getUnread.useQuery(undefined, {
-    refetchInterval: 10000
+    refetchInterval: 300000
   });
 
   const unreadNotifications = notifications.filter(n => !n.read).length;

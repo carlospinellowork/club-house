@@ -38,6 +38,10 @@ export async function updateProfileAction(input: {
   location?: string; 
   bio?: string; 
   image?: string; 
+  role?: "FAN" | "JOURNALIST";
+  favoriteTeamId?: number;
+  favoriteTeamName?: string;
+  outlet?: string;
 }) {
   const caller = await api();
   const res = await caller.member.updateProfile(input);

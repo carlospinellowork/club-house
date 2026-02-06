@@ -12,7 +12,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import { authClient } from "@/lib/auth-client";
-import { LogOut, Shield, User } from "lucide-react";
+import { LogOut, Shield, Tv, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLogout } from "../(auth)/mutation";
@@ -57,6 +57,21 @@ export default function HeaderClient({ user: initialUser }: Props) {
             <h1 className="text-xl font-bold text-foreground">ClubHouse FC</h1>
           </Link>
           <ModeToggle />
+
+          {/* Live Matches Button */}
+          {user?.id && (
+            <Link href="/live">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 relative group hover:bg-red-500/10 hover:border-red-500/50 transition-all"
+              >
+                <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse" />
+                <Tv className="h-4 w-4 text-red-500" />
+                <span className="hidden md:inline font-semibold">Ao Vivo</span>
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center space-x-2">

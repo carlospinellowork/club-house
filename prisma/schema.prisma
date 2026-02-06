@@ -14,6 +14,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  FAN
+  JOURNALIST
+}
+
 model User {
   id            String        @id
   name          String
@@ -22,6 +27,19 @@ model User {
   image         String?
   bio           String?
   location      String?
+  role          UserRole      @default(FAN)
+  
+  // Condicional ao Fan
+  favoriteTeamId Int?
+  favoriteTeamName String?
+
+  // Condicional ao Jornalista
+  outlet        String?
+  isVerified    Boolean       @default(false)
+
+  // Onboarding
+  hasOnboarded  Boolean       @default(false)
+
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @default(now()) @updatedAt
   sessions      Session[]

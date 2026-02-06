@@ -12,4 +12,26 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
   },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+      },
+      hasOnboarded: {
+        type: "boolean",
+      },
+      favoriteTeamName: {
+        type: "string",
+      },
+      bio: {
+        type: "string",
+      },
+      location: {
+        type: "string",
+      },
+      outlet: {
+        type: "string",
+      },
+    },
+  },
 });

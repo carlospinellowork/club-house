@@ -30,6 +30,9 @@ const editProfileSchema = z.object({
     .max(300, "A biografia pode ter no máximo 300 caracteres")
     .optional(),
   image: z.instanceof(File).optional(),
+  role: z.enum(["FAN", "JOURNALIST"]),
+  favoriteTeamName: z.string().optional(),
+  outlet: z.string().optional(),
 });
 
 type EditProfileForm = z.infer<typeof editProfileSchema>;
@@ -49,14 +52,19 @@ export function EditProfileDialog({
   const [preview, setPreview] = useState<string | null>(null);
   const utils = trpc.useUtils();
 
-  const { control, setValue, handleSubmit } = useForm<EditProfileForm>({
+  const { control, setValue, handleSubmit, watch } = useForm<EditProfileForm>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
       name: member.name,
       location: member.location || "",
       bio: member.bio || "",
+      role: member.role,
+      favoriteTeamName: member.favoriteTeamName || "",
+      outlet: member.outlet || "",
     },
   });
+
+  const selectedRole = watch("role");
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: { "image/*": [] },
@@ -65,7 +73,7 @@ export function EditProfileDialog({
       if (acceptedFiles.length === 0) return;
       const file = acceptedFiles[0];
       setValue("image", file);
-      
+
       const reader = new FileReader();
       reader.onload = () => {
         setPreview(reader.result as string);
@@ -83,6 +91,9 @@ export function EditProfileDialog({
           location: data.location,
           bio: data.bio,
           image: preview || member.avatar || undefined,
+          role: data.role,
+          favoriteTeamName: data.role === "FAN" ? data.favoriteTeamName : undefined,
+          outlet: data.role === "JOURNALIST" ? data.outlet : undefined,
         });
         utils.member.getById.invalidate({ id: member.id });
         toast.success("Perfil atualizado com sucesso");
@@ -95,7 +106,7 @@ export function EditProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Perfil</DialogTitle>
         </DialogHeader>
@@ -148,23 +159,60 @@ export function EditProfileDialog({
               )}
             />
 
-            <Controller
-              name="location"
-              control={control}
-              render={({ field, fieldState: { error } }) => (
-                <div className="space-y-1">
-                  <Label htmlFor="location">Localização</Label>
-                  <Input
-                    id="location"
-                    {...field}
-                    placeholder="Cidade, Estado"
-                  />
-                  {error && (
-                    <p className="text-xs text-red-500">{error.message}</p>
-                  )}
-                </div>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <div className="space-y-1">
+                    <Label htmlFor="role">Eu sou...</Label>
+                    <select
+                      id="role"
+                      {...field}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="FAN">Torcedor</option>
+                      <option value="JOURNALIST">Jornalista</option>
+                    </select>
+                  </div>
+                )}
+              />
+
+              <Controller
+                name="location"
+                control={control}
+                render={({ field }) => (
+                  <div className="space-y-1">
+                    <Label htmlFor="location">Localização</Label>
+                    <Input id="location" {...field} placeholder="São Paulo, SP" />
+                  </div>
+                )}
+              />
+            </div>
+
+            {selectedRole === "FAN" ? (
+              <Controller
+                name="favoriteTeamName"
+                control={control}
+                render={({ field }) => (
+                  <div className="space-y-1">
+                    <Label htmlFor="favoriteTeamName">Time do Coração</Label>
+                    <Input id="favoriteTeamName" {...field} placeholder="Ex: Corinthians" />
+                  </div>
+                )}
+              />
+            ) : (
+              <Controller
+                name="outlet"
+                control={control}
+                render={({ field }) => (
+                  <div className="space-y-1">
+                    <Label htmlFor="outlet">Veículo de Comunicação</Label>
+                    <Input id="outlet" {...field} placeholder="Ex: ESPN" />
+                  </div>
+                )}
+              />
+            )}
 
             <Controller
               name="bio"

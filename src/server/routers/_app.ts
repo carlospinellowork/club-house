@@ -1,6 +1,7 @@
 import { router } from "../trpc";
 import { CommentRouter } from "./comment";
 import { FollowRouter } from "./follow";
+import { footballRouter } from "./football";
 import { LikeRouter } from "./like";
 import { MemberProfileRouter } from "./members";
 import { notificationRouter } from "./notification";
@@ -12,7 +13,8 @@ export const appRouter = router({
   like: LikeRouter,
   follow: FollowRouter,
   comment: CommentRouter,
-  notification: notificationRouter
+  notification: notificationRouter,
+  football: footballRouter,
 });
 
 export type AppRouter = typeof appRouter;
